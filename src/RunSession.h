@@ -3,7 +3,8 @@
 
 #include <vector>
 #include <string>
-#include "ScoringSystem.h" // Add this to recognize ScoringSystem and Card struct
+#include "ScoringSystem.h"
+#include "Deck.h"
 
 class RunSession {
 private:
@@ -13,6 +14,7 @@ private:
     
     // Pointer to the ScoringSystem to handle point math
     ScoringSystem* scoring;
+    Deck* deck;
 
 public:
     RunSession();

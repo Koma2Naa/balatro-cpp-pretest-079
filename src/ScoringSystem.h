@@ -7,7 +7,7 @@
 // A simple struct to represent a card
 struct Card {
     int rank;
-    std::string suit;
+    std::string name;
 };
 
 class ScoringSystem {
