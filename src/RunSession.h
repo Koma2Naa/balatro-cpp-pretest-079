@@ -3,19 +3,16 @@
 
 #include <vector>
 #include <string>
-
-// Forward declarations to keep it modular
-class ScoringSystem;
-class ShopSystem;
+#include "ScoringSystem.h" // Add this to recognize ScoringSystem and Card struct
 
 class RunSession {
 private:
     int currentRound;
     int totalScore;
     bool isRunning;
-    // Pointers to other systems for easy modification
+    
+    // Pointer to the ScoringSystem to handle point math
     ScoringSystem* scoring;
-    ShopSystem* shop;
 
 public:
     RunSession();
@@ -26,7 +23,6 @@ public:
     void visitShop();
     void endRun();
     
-    // Getter for the loop state
     bool isActive() const { return isRunning; }
 };
 

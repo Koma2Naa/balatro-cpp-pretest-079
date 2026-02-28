@@ -17,9 +17,23 @@ void RunSession::startRun() {
 
 void RunSession::playHand() {
     std::cout << "\n[Round " << currentRound << "] Playing hand..." << std::endl;
-    int roundScore = 100; // Placeholder base score
-    totalScore += roundScore;
-    std::cout << "Round Score: " << roundScore << " | Total Score: " << totalScore << std::endl;
+    
+    //Test hand
+    std::vector<Card> hand = {
+        {5, "Hearts"},
+        {7, "Spades"},
+        {3, "Diamonds"}
+    };
+    
+    int base = scoring->calculateBaseScore(hand);
+    int finalScore = scoring->applyModifiers(base);
+    
+    totalScore += finalScore;
+    std::cout << "Base Score (from cards): " << base << std::endl;
+    std::cout << "Final Score (after modifiers): " << finalScore << std::endl;
+    std::cout << "Total Run Score: " << totalScore << std::endl;
+    
+    currentRound++;
 }
 
 void RunSession::visitShop() {
