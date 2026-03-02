@@ -3,8 +3,8 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
-// A simple struct to represent a card
 struct Card {
     int rank;
     std::string name;
@@ -13,12 +13,13 @@ struct Card {
 class ScoringSystem {
 public:
     ScoringSystem();
-    
-    // Logic for calculating the raw score from a hand of cards
     int calculateBaseScore(const std::vector<Card>& hand);
-    
-    // Logic for applying modifiers (like Double or Flat bonuses)
+    int getHandMultiplier(const std::vector<Card>& hand);
     int applyModifiers(int baseScore);
+
+private:
+    bool isFlush(const std::vector<Card>& hand);
+    bool isStraight(std::vector<int> ranks);
 };
 
 #endif

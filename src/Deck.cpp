@@ -9,7 +9,7 @@ void Deck::reset() {
     std::string suits[] = {"Hearts", "Spades", "Diamonds", "Clubs"};
     for (const std::string& s : suits) {
         // Ace
-        cards.push_back({11, "Ace of " + s});
+        cards.push_back({14, "Ace of " + s});
         
         // 2 through 10
         for (int r = 2; r <= 10; ++r) {
@@ -17,9 +17,9 @@ void Deck::reset() {
         }
         
         // Face Cards
-        cards.push_back({10, "Jack of " + s});
-        cards.push_back({10, "Queen of " + s});
-        cards.push_back({10, "King of " + s});
+        cards.push_back({11, "Jack of " + s});
+        cards.push_back({12, "Queen of " + s});
+        cards.push_back({13, "King of " + s});
     }
 }
 

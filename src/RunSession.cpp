@@ -16,21 +16,21 @@ void RunSession::startRun() {
 }
 
 void RunSession::playHand() {
-    std::cout << "\n[Round " << currentRound << "] Drawing and playing hand..." << std::endl;
+    std::cout << "\n[Round " << currentRound << "] Playing hand..." << std::endl;
     
-    // Draw 5 cards from the deck
     std::vector<Card> hand = deck->drawHand(5);
-    
     int base = scoring->calculateBaseScore(hand);
-    int finalScore = scoring->applyModifiers(base);
+    int mult = scoring->getHandMultiplier(hand);
     
-    totalScore += finalScore;
-    
-    // Show what was drawn
-    std::cout << "Hand played: ";
+    int roundScore = base * mult;
+    totalScore += roundScore;
+
+    std::cout << "Hand: ";
     for(const auto& c : hand) std::cout << "[" << c.name << "] ";
     
-    std::cout << "\nBase Score: " << base << " | Final Score: " << finalScore << std::endl;
+    std::cout << "\nScore: " << base << " x " << mult << " = " << roundScore << std::endl;
+    std::cout << "Total: " << totalScore << std::endl;
+    
     currentRound++;
 }
 
