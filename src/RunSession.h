@@ -10,6 +10,10 @@ class RunSession {
 private:
     int currentRound;
     int totalScore;
+    int roundScore;   // Points earned in the current round only
+    int targetScore;  // Points needed to clear the round
+    int playsLeft;    // New: Limit for playing hands
+    int discardsLeft; // Optional: Limit how many times you can discard
     bool isRunning;
     
     // Pointer to the ScoringSystem to handle point math
@@ -25,7 +29,7 @@ public:
     void visitShop();
     void endRun();
     
-    bool isActive() const { return isRunning; }
+    bool isGameRunning() const { return isRunning; }
 };
 
 #endif

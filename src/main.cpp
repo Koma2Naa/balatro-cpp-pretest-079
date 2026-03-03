@@ -3,16 +3,17 @@
 
 int main() {
     RunSession game;
-    
     game.startRun();
-    
-    // Loop for minimum 3 rounds as required by the assignment
-    for(int i = 0; i < 3; ++i){
+
+    // Only continue if the game hasn't hit a Game Over state
+    while (game.isGameRunning()) { 
         game.playHand();
-        game.visitShop();
+        
+        if (game.isGameRunning()) {
+            game.visitShop();
+        }
     }
-    
-    game.endRun();
-    
+
+    std::cout << "Thanks for playing!\n" << std::endl;
     return 0;
 }
