@@ -53,15 +53,23 @@ int ScoringSystem::getHandMultiplier(const std::vector<Card>& hand) {
 }
 
 bool ScoringSystem::isFlush(const std::vector<Card>& hand) {
-    if (hand.size() < 5) return false; // In Balatro, a flush needs 5 cards
+    if (hand.size() < 5) return false;
 
-    size_t pos = hand[0].name.find(" of ");
-    if (pos == std::string::npos) return false; // Safety check
+    // We'll just check if all cards contain the same last character
+    std::string firstCardName = hand[0].name;
+    // Get the last symbol (Unicode symbols can be multiple bytes, so we'll search for the symbol)
+    std::string symbols[] = {"♥", "♠", "♦", "♣"};
+    std::string targetSymbol = "";
     
-    std::string firstSuit = hand[0].name.substr(pos + 4);
-    
+    for(const std::string& s : symbols) {
+        if (firstCardName.find(s) != std::string::npos) {
+            targetSymbol = s;
+            break;
+        }
+    }
+
     for (const auto& c : hand) {
-        if (c.name.find(firstSuit) == std::string::npos) return false;
+        if (c.name.find(targetSymbol) == std::string::npos) return false;
     }
     return true;
 }
