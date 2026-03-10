@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "ScoringSystem.h"
+#include "modifiers/IModifier.h"
 #include "Deck.h"
 
 class RunSession {
@@ -15,6 +16,7 @@ private:
     int playsLeft;    // New: Limit for playing hands
     int discardsLeft; // Optional: Limit how many times you can discard
     bool isRunning;
+    std::vector<IModifier*> inventory;
     
     // Pointer to the ScoringSystem to handle point math
     ScoringSystem* scoring;

@@ -1,4 +1,5 @@
 #include "RunSession.h"
+#include "modifiers/ModifierFactory.h"
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -14,7 +15,11 @@ RunSession::RunSession() : currentRound(1), totalScore(0), isRunning(true) {
 }
 
 RunSession::~RunSession() {
-    // Clean up pointers will happen here later
+    for (auto item : inventory) {
+        delete item;
+    }
+    delete scoring;
+    delete deck;
 }
 
 void RunSession::startRun() {
@@ -22,16 +27,26 @@ void RunSession::startRun() {
 }
 
 void RunSession::playHand() {
-    roundScore = 0;   // Round Reset
-    playsLeft = 4;    // Round Reset
-    discardsLeft = 4; // Round Reset 
+    deck->reset();
+    deck->shuffle();
+
+    roundScore = 0;   
+    discardsLeft = 4; 
+    
+    // 1. Calculate the starting hand limit based on inventory
+    int baseHands = 4;
+    for (auto item : inventory) {
+        baseHands = item->modifyHands(baseHands);
+    }
+    playsLeft = baseHands;
+
+    // 2. Draw the initial hand
     std::vector<Card> currentHand = deck->drawHand(8);
     
     std::cout << "\n--- Round " << currentRound << " ---" << std::endl;
     std::cout << "TARGET SCORE: " << targetScore << std::endl;
 
-    // Continue until the player meets the target
-    while (roundScore < targetScore) {
+    while (roundScore < targetScore && isRunning) {
         std::sort(currentHand.begin(), currentHand.end(), [](const Card& a, const Card& b) {
             return a.rank < b.rank;
         });
@@ -39,10 +54,11 @@ void RunSession::playHand() {
         std::cout << "\nPoints: " << roundScore << " / " << targetScore;
         std::cout << "\nPlays Left: " << playsLeft << " | Discards: " << discardsLeft << std::endl;
 
+        // Check for Game Over
         if (playsLeft <= 0 && roundScore < targetScore) {
             std::cout << "\n!!! OUT OF HANDS - GAME OVER !!!" << std::endl;
             endRun(); 
-            return; // Exit the function immediately
+            return; 
         }
 
         for (int i = 0; i < currentHand.size(); ++i) {
@@ -60,43 +76,45 @@ void RunSession::playHand() {
             std::stringstream ss(input);
             
             std::vector<Card> selected;
-            int idx;
             std::vector<int> usedIndices;
+            int idx;
             while (ss >> idx) {
-                if (idx >= 1 && idx <= currentHand.size()) {
+                if (idx >= 1 && idx <= (int)currentHand.size()) {
                     selected.push_back(currentHand[idx - 1]);
                     usedIndices.push_back(idx - 1);
                 }
             }
 
-            int base = scoring->calculateBaseScore(selected);
-            int mult = scoring->getHandMultiplier(selected);
-            int score = base * mult;
+            // --- SCORING LOGIC START ---
+            int baseValue = scoring->calculateBaseScore(selected);
+            int multiplier = scoring->getHandMultiplier(selected);
             
-            roundScore += score;
+            // Apply Item Bonuses from Inventory
+            for (auto item : inventory) {
+                multiplier = item->modifyMult(multiplier);
+            }
+            
+            int finalHandScore = baseValue * multiplier;
+            roundScore += finalHandScore;
             playsLeft--;
-            std::cout << ">> Scored: " << base << " x " << mult << " = " << score << std::endl;
+            
+            std::cout << ">> Scored: " << baseValue << " x " << multiplier << " = " << finalHandScore << std::endl;
+            // --- SCORING LOGIC END ---
 
             if (roundScore >= targetScore) {
                 std::cout << "\n*** ROUND CLEARED! ***" << std::endl;
-                targetScore *= 2; 
+                targetScore *= 1.5; 
                 currentRound++;
-                break;
+                return; // Round finished successfully
             }
 
-            if (playsLeft <= 0 && roundScore < targetScore) {
-                std::cout << "\n!!! OUT OF HANDS - GAME OVER !!!" << std::endl;
-                this->endRun(); // This sets isRunning = false
-                return; 
-            }
-
-            // Remove played cards and draw new ones
+            // Remove and replace cards
             std::sort(usedIndices.rbegin(), usedIndices.rend());
             for (int i : usedIndices) currentHand.erase(currentHand.begin() + i);
-            
             std::vector<Card> replacements = deck->drawHand(usedIndices.size());
             for (const auto& c : replacements) currentHand.push_back(c);
         } 
+
         else if (choice == 'd') {
             if (discardsLeft <= 0) {
                 std::cout << "!! No discards remaining !!" << std::endl;
@@ -111,41 +129,58 @@ void RunSession::playHand() {
             std::vector<int> indicesToDiscard;
             int idx;
             while (ssD >> idx) {
-                if (idx >= 1 && idx <= currentHand.size()) {
-                    // Store 0-based index
+                if (idx >= 1 && idx <= (int)currentHand.size()) {
                     indicesToDiscard.push_back(idx - 1);
                 }
             }
 
-            // Sort indices in descending order to avoid shifting issues when erasing
+            if (indicesToDiscard.empty()) {
+                std::cout << "No valid cards selected to discard." << std::endl;
+                continue;
+            }
+
+            // Sort indices descending to avoid shifting issues during erase
             std::sort(indicesToDiscard.rbegin(), indicesToDiscard.rend());
 
-            // Remove selected cards from currentHand
+            // Remove cards
             for (int i : indicesToDiscard) {
                 currentHand.erase(currentHand.begin() + i);
             }
 
-            // Draw new cards to replace them (back up to 8 cards)
-            int cardsNeeded = 8 - currentHand.size();
-            std::vector<Card> newCards = deck->drawHand(cardsNeeded);
-            
-            for (const auto& nc : newCards) {
+            // Draw replacements
+            std::vector<Card> replacements = deck->drawHand(indicesToDiscard.size());
+            for (const auto& nc : replacements) {
                 currentHand.push_back(nc);
             }
 
             std::cout << "Discarded " << indicesToDiscard.size() << " cards and drew replacements!" << std::endl;
             discardsLeft--;
         }
+        
     }
-
-    std::cout << "\n*** ROUND CLEARED! ***" << std::endl;
-    totalScore += roundScore;
-    targetScore *= 1.5;
-    currentRound++;
 }
 
 void RunSession::visitShop() {
-    std::cout << "--- Entering Shop ---" << std::endl;
+    std::cout << "\n--- Welcome to the Shop ---" << std::endl;
+    std::cout << "Available Items:" << std::endl;
+    std::cout << "1. Energy Drink (+10 Mult, -2 Hands)" << std::endl;
+    std::cout << "2. Tea (+3 Mult)" << std::endl;
+    std::cout << "Enter choice (1-2) or [s] to skip: ";
+    
+    char choice;
+    std::cin >> choice;
+    
+    IModifier* newItem = nullptr;
+    if (choice == '1') {
+        newItem = ModifierFactory::createModifier("energy");
+    } else if (choice == '2') {
+        newItem = ModifierFactory::createModifier("tea");
+    }
+
+    if (newItem) {
+        inventory.push_back(newItem);
+        std::cout << "Purchased: " << newItem->getName() << "!" << std::endl;
+    }
 }
 
 void RunSession::endRun() {
